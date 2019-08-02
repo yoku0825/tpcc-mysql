@@ -74,6 +74,7 @@ main(argc, argv)
 	char           db_string[DB_STRING_MAX];
 	char	       db_user[DB_STRING_MAX];
 	char	       db_password[DB_STRING_MAX];
+        char           db_socket[DB_STRING_MAX]; 
         int            port= 3306;
 
 	int i,c;
@@ -89,7 +90,7 @@ main(argc, argv)
 
   /* Parse args */
 
-    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:l:m:n:")) != -1) {
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:l:m:n:S:")) != -1) {
         switch (c) {
         case 'h':
             printf ("option h with value '%s'\n", optarg);
@@ -128,6 +129,10 @@ main(argc, argv)
             printf ("option P with value '%s'\n", optarg);
             port = atoi(optarg);
             break;
+        case 'S':
+            printf ("option S with value '%s'\n", optarg);
+            strncpy(db_socket, optarg, DB_STRING_MAX);
+            break;
         case '?':
     	    printf("Usage: tpcc_load -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -l part -m min_wh -n max_wh\n");
     	    printf("* [part]: 1=ITEMS 2=WAREHOUSE 3=CUSTOMER 4=ORDERS\n");
@@ -143,7 +148,7 @@ main(argc, argv)
         printf ("\n");
     }
 
-	if(strcmp(connect_string,"l")==0){
+	if(strcmp(connect_string,"l")==0 || !(connect_string)){
 	  is_local = 1;
 	}else{
 	  is_local = 0;
@@ -157,6 +162,7 @@ main(argc, argv)
 	printf("<Parameters>\n");
 	if(is_local==0)printf("     [server]: %s\n", connect_string);
 	if(is_local==0)printf("     [port]: %d\n", port);
+        printf("     [Socket]: %s\n", db_socket);
 	printf("     [DBname]: %s\n", db_string);
 	printf("       [user]: %s\n", db_user);
 	printf("       [pass]: %s\n", db_password);
@@ -196,10 +202,10 @@ main(argc, argv)
 
 	if(is_local==1){
 	    /* exec sql connect :connect_string; */
-	    resp = mysql_real_connect(mysql, "localhost", db_user, db_password, db_string, port, NULL, 0);
+	    resp = mysql_real_connect(mysql, "localhost", db_user, db_password, db_string, port, db_socket, 0);
 	}else{
 	    /* exec sql connect :connect_string USING :db_string; */
-	    resp = mysql_real_connect(mysql, connect_string, db_user, db_password, db_string, port, NULL, 0);
+	    resp = mysql_real_connect(mysql, connect_string, db_user, db_password, db_string, port, db_socket, 0);
 	}
 
 	if(resp) {
